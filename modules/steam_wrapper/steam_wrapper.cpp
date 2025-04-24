@@ -39,11 +39,11 @@ SteamWrapper::SteamWrapper() {
 	debug_enabled = GLOBAL_DEF_BASIC("steam/settings/print_logs", true);
 	app_id = GLOBAL_DEF_BASIC("steam/settings/app_id", 0);
 
-	if(Engine::get_singleton()->is_editor_hint()) {
+	if (Engine::get_singleton()->is_editor_hint()) {
 		return;
 	}
 
-	if(app_id == 0) {
+	if (app_id == 0) {
 		module_print("If you want to use Steam API, you need set your app_id in project settings (steam > settings)");
 		return;
 	}
@@ -85,7 +85,7 @@ SteamWrapper::SteamWrapper() {
 		return;
 	}
 
-	if(!library_located) {
+	if (!library_located) {
 		module_print("Cannot locate SteamAPI library, make sure that you placed the dll/so in the executable folder");
 		return;
 	}
@@ -198,15 +198,20 @@ void SteamWrapper::_bind_methods() {
 
 // Helpers
 void SteamWrapper::module_print(const String &s) {
-	if (debug_enabled) print_line("[Steam] " + s);
+	if (debug_enabled) {
+		print_line("[Steam] " + s);
+	}
 }
 
 String SteamWrapper::init_result_to_string(const SteamAPIInitResult r) {
-	switch (r)
-	{
-		case SteamAPIInitResult_OK: return "OK";
-		case SteamAPIInitResult_VersionMismatch: return "Version Mismatch";
-		case SteamAPIInitResult_NoSteamClient: return "No Steam Client";
-		default: return "Generic Fail";
+	switch (r) {
+		case SteamAPIInitResult_OK:
+			return "OK";
+		case SteamAPIInitResult_VersionMismatch:
+			return "Version Mismatch";
+		case SteamAPIInitResult_NoSteamClient:
+			return "No Steam Client";
+		default:
+			return "Generic Fail";
 	}
 }

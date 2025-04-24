@@ -1,6 +1,7 @@
 def can_build(env, platform):
-	return True # we don't need to validate os here, module itself do that at construction time
-				# that also allow that we can avoid Engine.has_singleton() validations in gdscript.
+	# we don't need to validate os here, module itself do that at construction time
+	# that also allow that we can avoid Engine.has_singleton() validations in gdscript.
+	return True
 
 def configure(env):
 	pass
