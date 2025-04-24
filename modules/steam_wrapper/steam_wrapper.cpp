@@ -158,7 +158,7 @@ SteamWrapper::SteamWrapper() {
 		return;
 	}
 	steam_get_steamid_function = (SteamAPI_ISteamUser_GetSteamID_Function)symbol_handle;
-	}
+}
 
 SteamWrapper::~SteamWrapper() {
 	ERR_FAIL_COND(singleton != this);
