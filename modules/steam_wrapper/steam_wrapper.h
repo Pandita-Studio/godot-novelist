@@ -27,9 +27,9 @@
 #ifndef STEAM_WRAPPER_H
 #define STEAM_WRAPPER_H
 
-#include "core/object/ref_counted.h"
-#include "core/config/project_settings.h"
 #include "core/config/engine.h"
+#include "core/config/project_settings.h"
+#include "core/object/ref_counted.h"
 #include "core/os/os.h"
 
 enum SteamAPIInitResult {
@@ -52,45 +52,45 @@ typedef ISteamUser *(*SteamAPI_SteamUser_Function)();
 typedef uint64_t (*SteamAPI_ISteamUser_GetSteamID_Function)(ISteamUser *self);
 
 class SteamWrapper : public Object {
-    GDCLASS(SteamWrapper, Object);
+	GDCLASS(SteamWrapper, Object);
 
-    public:
-        static SteamWrapper *get_singleton();
+	public:
+		static SteamWrapper *get_singleton();
 
-        SteamWrapper();
-        ~SteamWrapper();
+		SteamWrapper();
+		~SteamWrapper();
 
-        uint32_t get_app_id();
-        bool is_steam_initialized();
+		uint32_t get_app_id();
+		bool is_steam_initialized();
 
-        // Wrapped API functions
-        uint64_t get_user_steam_id();
-    
-    protected:
-        static SteamWrapper *singleton;
-        static void _bind_methods();
-    
-    private:
-        // Init functions pointers
-        SteamAPI_InitFunction steam_init_function = nullptr;
-        SteamAPI_InitFlatFunction steam_init_flat_function = nullptr;
-        SteamAPI_ShutdownFunction steam_shutdown_function = nullptr;
+		// Wrapped API functions
+		uint64_t get_user_steam_id();
 
-        // Flat api functions pointers
-        SteamAPI_SteamUser_Function steam_get_user_interface_function = nullptr;
-        SteamAPI_ISteamUser_GetSteamID_Function steam_get_steamid_function = nullptr;
+	protected:
+		static SteamWrapper *singleton;
+		static void _bind_methods();
 
-        // Interfaces and library pointers
-        ISteamUser *steam_user_interface = nullptr;
-        void *steam_library_handle = nullptr;
+	private:
+		// Init functions pointers
+		SteamAPI_InitFunction steam_init_function = nullptr;
+		SteamAPI_InitFlatFunction steam_init_flat_function = nullptr;
+		SteamAPI_ShutdownFunction steam_shutdown_function = nullptr;
 
-        bool steam_initialized = false;
-        bool debug_enabled;
-        uint32_t app_id;
+		// Flat api functions pointers
+		SteamAPI_SteamUser_Function steam_get_user_interface_function = nullptr;
+		SteamAPI_ISteamUser_GetSteamID_Function steam_get_steamid_function = nullptr;
 
-        // Helpers
-        void module_print(const String &s);
-        String init_result_to_string(const SteamAPIInitResult r);
+		// Interfaces and library pointers
+		ISteamUser *steam_user_interface = nullptr;
+		void *steam_library_handle = nullptr;
+
+		bool steam_initialized = false;
+		bool debug_enabled;
+		uint32_t app_id;
+
+		// Helpers
+		void module_print(const String &s);
+		String init_result_to_string(const SteamAPIInitResult r);
 };
 
 #endif // STEAM_WRAPPER_H

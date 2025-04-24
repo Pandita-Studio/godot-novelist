@@ -38,14 +38,14 @@ void initialize_steam_wrapper_module(ModuleInitializationLevel p_level) {
 	}
 
 	ClassDB::register_class<SteamWrapper>();
-    Steam_singleton = memnew(SteamWrapper);
-    Engine::get_singleton()->add_singleton(Engine::Singleton("Steam", SteamWrapper::get_singleton()));
+	Steam_singleton = memnew(SteamWrapper);
+	Engine::get_singleton()->add_singleton(Engine::Singleton("Steam", SteamWrapper::get_singleton()));
 }
 
 void uninitialize_steam_wrapper_module(ModuleInitializationLevel p_level) {
 	if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE) {
 		return;
 	}
-    Engine::get_singleton()->remove_singleton("Steam");
-    memdelete(Steam_singleton);
+	Engine::get_singleton()->remove_singleton("Steam");
+	memdelete(Steam_singleton);
 }
