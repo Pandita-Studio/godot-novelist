@@ -1,0 +1,31 @@
+<class name="SteamWrapper" inherits="Object" version="0.1" is_singleton="true">
+	<brief_description>
+		Dynamic Steam API wrapper for Godot.
+	</brief_description>
+	<description>
+		This module dynamically loads and wraps the Steam API and creates a singleton to interact with it.
+	</description>
+	<methods>
+		<method name="get_app_id">
+			<return type="int">
+			</return>
+			<description>
+				Returns the current app ID.
+			</description>
+		</method>
+		<method name="is_steam_initialized">
+			<return type="bool">
+			</return>
+			<description>
+				True if Steam is initialized, false otherwise.
+			</description>
+		</method>
+		<method name="get_user_steam_id">
+			<return type="int">
+			</return>
+			<description>
+				Returns the current user's Steam ID.
+			</description>
+		</method>
+    </methods>
+</class>
