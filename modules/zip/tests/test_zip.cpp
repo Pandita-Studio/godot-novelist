@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  core_globals.cpp                                                      */
+/*  test_zip.cpp                                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,8 +28,14 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "core_globals.h"
+#include "test_zip.h"
 
-bool CoreGlobals::leak_reporting_enabled = true;
-bool CoreGlobals::print_line_enabled = true;
-bool CoreGlobals::print_error_enabled = true;
+namespace TestZip {
+
+void check_file_size(const String &p_path, int p_expected_size) {
+	Ref<FileAccess> f = FileAccess::open(p_path, FileAccess::READ);
+	CHECK(f.is_valid());
+	CHECK(f->get_length() == p_expected_size);
+}
+
+} // namespace TestZip
