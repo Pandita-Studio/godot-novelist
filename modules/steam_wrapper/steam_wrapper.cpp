@@ -40,8 +40,13 @@ SteamWrapper::SteamWrapper() {
 	ERR_FAIL_COND(singleton != nullptr);
 	singleton = this;
 
+	bool steam_enabled = GLOBAL_DEF_BASIC("steam/settings/enable", false);
 	debug_enabled = GLOBAL_DEF_BASIC("steam/settings/print_logs", true);
 	app_id = GLOBAL_DEF_BASIC("steam/settings/app_id", 0);
+
+	if (!steam_enabled) {
+		return;
+	}
 
 	if (Engine::get_singleton()->is_editor_hint()) {
 		return;
@@ -309,7 +314,6 @@ void SteamWrapper::clear_achievement(const String &name) {
 
 void SteamWrapper::run_callbacks() {
 	if (!steam_initialized) {
-		module_print("Cannot run callbacks, SteamAPI not initialized");
 		return;
 	}
 
