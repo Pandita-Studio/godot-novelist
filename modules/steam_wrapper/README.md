@@ -2,9 +2,31 @@
 
 This module dynamically loads and wraps the Steam API and creates a singleton to interact with it.
 
+It is designed to use the Steam API in a Godot project without needing to compile the Steamworks SDK into the engine because it dinamically loads the Steam API at runtime and provides a simple interface to interact with it.
+
+If it is true that we do not need to compile the Steamworks SDK into the engine, however, to use the Steam API, you still need to have the Steamworks SDK binaries (.dll or .so) in the same directory as your Godot editor or in your game's executable directory.
+
+You can download the Steamworks SDK from the Steamworks website.
+
+Secondly, you need to set the `steam_appid`, which is the ID of your game on Steam. You can do this in Project Settings under the `Steam` category.
+
+With those two steps done, you can start using the Steam API in your Godot project.
+
 ```gdscript
-func _ready():
-    print(Steam.is_steam_initialized()) #True if everything goes well!
+func _ready() -> void:
+	if Steam.is_steam_initialized():
+		print("Steam is initialized")
+	else:
+		print("Steam is not initialized")
+		return
+
+	# Get the current app ID
+	var app_id = Steam.get_app_id()
+	print("Current app ID: ", app_id)
+
+	# Get the current user's Steam ID
+	var steam_id = Steam.get_user_steam_id()
+	print("Current user's Steam ID: ", steam_id)
 ```
 
 > [!TIP]

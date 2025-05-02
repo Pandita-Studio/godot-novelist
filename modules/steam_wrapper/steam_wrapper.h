@@ -35,6 +35,9 @@
 #include "core/object/ref_counted.h"
 #include "core/os/os.h"
 
+// As we are loading the library dynamically, we need to define the minimal types signatures.
+// See steam_api.h, steam_api_flat.h, steam_api_common.h, steam_api_internal.h and steam_api.json for reference.
+// (Steam API headers are not included)
 enum SteamAPIInitResult {
 	SteamAPIInitResult_OK = 0,
 	SteamAPIInitResult_FailedGeneric = 1,
@@ -42,15 +45,46 @@ enum SteamAPIInitResult {
 	SteamAPIInitResult_VersionMismatch = 3,
 };
 
-// Minimal type signatures
+typedef int32_t HSteamUser;
+typedef int32_t HSteamPipe;
+typedef uint32_t AppId_t;
+
+// Callbacks structs signatures
+struct CallbackMsg_t {
+	HSteamUser m_hSteamUser;
+	int m_iCallback;
+	uint8_t *m_pubParam;
+	int m_cubParam;
+};
+
+struct GameOverlayActivated_t {
+	uint8_t m_bActive;
+	bool m_bUserInitiated;
+	AppId_t m_nAppID;
+	uint32_t m_dwOverlayPID;
+	static const int k_iCallback = 331;
+};
+
+// Interfaces signatures
 typedef void ISteamUser;
+typedef void ISteamFriends;
 
-// Init functions (see steam_api.h for signature reference)
-typedef bool (*SteamAPI_InitFunction)();
-typedef SteamAPIInitResult (*SteamAPI_InitFlatFunction)(char *r_err_msg);
-typedef void (*SteamAPI_ShutdownFunction)();
+// Init functions signatures
+typedef bool (*SteamAPI_Init_Function)();
+typedef SteamAPIInitResult (*SteamAPI_InitFlat_Function)(char *r_err_msg);
+typedef void (*SteamAPI_Shutdown_Function)();
 
-// Flat API functions (see steam_api_flat.h for signature reference)
+// Needed for callbacks manual dispatch
+typedef HSteamUser (*SteamAPI_GetHSteamUser_Function)();
+typedef HSteamPipe (*SteamAPI_GetHSteamPipe_Function)();
+
+// Callbacks manual dispatch related functions signatures
+typedef void (*SteamAPI_ManualDispatch_Init_Function)();
+typedef void (*SteamAPI_ManualDispatch_RunFrame_Function)(HSteamPipe hSteamPipe);
+typedef bool (*SteamAPI_ManualDispatch_GetNextCallback_Function)(HSteamPipe hSteamPipe, CallbackMsg_t *pCallbackMsg);
+typedef void (*SteamAPI_ManualDispatch_FreeLastCallback_Function)(HSteamPipe hSteamPipe);
+
+// Flat API functions signatures
 typedef ISteamUser *(*SteamAPI_SteamUser_Function)();
 typedef uint64_t (*SteamAPI_ISteamUser_GetSteamID_Function)(ISteamUser *self);
 
@@ -63,11 +97,16 @@ public:
 	SteamWrapper();
 	~SteamWrapper();
 
-	uint32_t get_app_id();
-	bool is_steam_initialized();
+	inline uint32_t get_app_id() { return app_id; }
+	inline bool is_steam_initialized() { return steam_initialized; }
+	inline String get_steam_wrapper_version() { return steam_wrapper_version; }
+	inline String get_steam_api_version() { return steam_api_version; }
 
 	// Wrapped API functions
 	uint64_t get_user_steam_id();
+
+	// This function should be called every frame (on _physics_process() maybe?) to process callbacks
+	void run_callbacks();
 
 protected:
 	static SteamWrapper *singleton;
@@ -75,18 +114,32 @@ protected:
 
 private:
 	// Init functions pointers
-	SteamAPI_InitFunction steam_init_function = nullptr;
-	SteamAPI_InitFlatFunction steam_init_flat_function = nullptr;
-	SteamAPI_ShutdownFunction steam_shutdown_function = nullptr;
+	SteamAPI_Init_Function steam_init_function = nullptr;
+	SteamAPI_InitFlat_Function steam_init_flat_function = nullptr;
+	SteamAPI_Shutdown_Function steam_shutdown_function = nullptr;
 
 	// Flat api functions pointers
 	SteamAPI_SteamUser_Function steam_get_user_interface_function = nullptr;
 	SteamAPI_ISteamUser_GetSteamID_Function steam_get_steamid_function = nullptr;
 
-	// Interfaces and library pointers
+	// Callbacks functions pointers
+	SteamAPI_GetHSteamUser_Function steam_get_huser_function = nullptr;
+	SteamAPI_GetHSteamPipe_Function steam_get_hpipe_function = nullptr;
+
+	SteamAPI_ManualDispatch_Init_Function steam_manual_dispatch_init_function = nullptr;
+	SteamAPI_ManualDispatch_RunFrame_Function steam_manual_dispatch_run_frame_function = nullptr;
+	SteamAPI_ManualDispatch_GetNextCallback_Function steam_manual_dispatch_get_next_callback_function = nullptr;
+	SteamAPI_ManualDispatch_FreeLastCallback_Function steam_manual_dispatch_free_last_callback_function = nullptr;
+
+	// Interfaces, library and stuff pointers
+	HSteamUser h_user;
+	HSteamPipe h_pipe;
 	ISteamUser *steam_user_interface = nullptr;
 	void *steam_library_handle = nullptr;
 
+	// Some internal variables
+	String steam_wrapper_version = "0.0.1";
+	String steam_api_version = "1.62";
 	bool steam_initialized = false;
 	bool debug_enabled;
 	uint32_t app_id;

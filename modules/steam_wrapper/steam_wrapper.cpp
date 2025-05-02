@@ -112,9 +112,9 @@ SteamWrapper::SteamWrapper() {
 			module_print("Error loading SteamAPI_Init");
 			return;
 		}
-		steam_init_function = (SteamAPI_InitFunction)symbol_handle;
+		steam_init_function = (SteamAPI_Init_Function)symbol_handle;
 	} else {
-		steam_init_flat_function = (SteamAPI_InitFlatFunction)symbol_handle;
+		steam_init_flat_function = (SteamAPI_InitFlat_Function)symbol_handle;
 	}
 
 	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_Shutdown", symbol_handle);
@@ -122,7 +122,7 @@ SteamWrapper::SteamWrapper() {
 		module_print("Error loading SteamAPI_Shutdown");
 		return;
 	}
-	steam_shutdown_function = (SteamAPI_ShutdownFunction)symbol_handle;
+	steam_shutdown_function = (SteamAPI_Shutdown_Function)symbol_handle;
 
 	// Let's try to init SteamAPI
 	if (steam_init_flat_function) {
@@ -162,6 +162,55 @@ SteamWrapper::SteamWrapper() {
 		return;
 	}
 	steam_get_steamid_function = (SteamAPI_ISteamUser_GetSteamID_Function)symbol_handle;
+
+	// Callbacks
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_GetHSteamUser", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_GetHSteamUser");
+		return;
+	}
+	steam_get_huser_function = (SteamAPI_GetHSteamUser_Function)symbol_handle;
+
+	h_user = steam_get_huser_function();
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_GetHSteamPipe", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_GetHSteamPipe");
+		return;
+	}
+	steam_get_hpipe_function = (SteamAPI_GetHSteamPipe_Function)symbol_handle;
+
+	h_pipe = steam_get_hpipe_function();
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ManualDispatch_Init", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ManualDispatch_Init");
+		return;
+	}
+	steam_manual_dispatch_init_function = (SteamAPI_ManualDispatch_Init_Function)symbol_handle;
+
+	steam_manual_dispatch_init_function();
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ManualDispatch_RunFrame", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ManualDispatch_RunFrame");
+		return;
+	}
+	steam_manual_dispatch_run_frame_function = (SteamAPI_ManualDispatch_RunFrame_Function)symbol_handle;
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ManualDispatch_GetNextCallback", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ManualDispatch_GetNextCallback");
+		return;
+	}
+	steam_manual_dispatch_get_next_callback_function = (SteamAPI_ManualDispatch_GetNextCallback_Function)symbol_handle;
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ManualDispatch_FreeLastCallback", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ManualDispatch_FreeLastCallback");
+		return;
+	}
+	steam_manual_dispatch_free_last_callback_function = (SteamAPI_ManualDispatch_FreeLastCallback_Function)symbol_handle;
 }
 
 SteamWrapper::~SteamWrapper() {
@@ -177,14 +226,6 @@ SteamWrapper::~SteamWrapper() {
 	}
 }
 
-uint32_t SteamWrapper::get_app_id() {
-	return app_id;
-}
-
-bool SteamWrapper::is_steam_initialized() {
-	return steam_initialized;
-}
-
 // Wrapped API functions
 uint64_t SteamWrapper::get_user_steam_id() {
 	if (!steam_initialized || !steam_user_interface || !steam_get_steamid_function) {
@@ -194,10 +235,39 @@ uint64_t SteamWrapper::get_user_steam_id() {
 	return steam_get_steamid_function(steam_user_interface);
 }
 
+void SteamWrapper::run_callbacks() {
+	if (!steam_initialized) {
+		module_print("Cannot run callbacks, SteamAPI not initialized");
+		return;
+	}
+
+	if (!steam_manual_dispatch_run_frame_function || !steam_manual_dispatch_get_next_callback_function) {
+		return;
+	};
+
+	steam_manual_dispatch_run_frame_function(h_pipe);
+
+	CallbackMsg_t callback_msg;
+
+	while (steam_manual_dispatch_get_next_callback_function(h_pipe, &callback_msg)) {
+		if (callback_msg.m_iCallback == GameOverlayActivated_t::k_iCallback) {
+			GameOverlayActivated_t *overlay_callback = (GameOverlayActivated_t *)callback_msg.m_pubParam;
+			bool active = overlay_callback->m_bActive != 0;
+			emit_signal("game_overlay_toggled", active);
+		}
+		steam_manual_dispatch_free_last_callback_function(h_pipe);
+	}
+}
+
 void SteamWrapper::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_app_id"), &SteamWrapper::get_app_id);
 	ClassDB::bind_method(D_METHOD("is_steam_initialized"), &SteamWrapper::is_steam_initialized);
+	ClassDB::bind_method(D_METHOD("get_steam_wrapper_version"), &SteamWrapper::get_steam_wrapper_version);
+	ClassDB::bind_method(D_METHOD("get_steam_api_version"), &SteamWrapper::get_steam_api_version);
 	ClassDB::bind_method(D_METHOD("get_user_steam_id"), &SteamWrapper::get_user_steam_id);
+	ClassDB::bind_method(D_METHOD("run_callbacks"), &SteamWrapper::run_callbacks);
+
+	ADD_SIGNAL(MethodInfo("game_overlay_toggled", PropertyInfo(Variant::BOOL, "active")));
 }
 
 // Helpers

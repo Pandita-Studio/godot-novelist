@@ -20,6 +20,20 @@
 				True if Steam is initialized, false otherwise.
 			</description>
 		</method>
+		<method name="get_steam_wrapper_version">
+			<return type="int">
+			</return>
+			<description>
+				Returns the current user's Steam ID.
+			</description>
+		</method>
+		<method name="get_steam_api_version">
+			<return type="int">
+			</return>
+			<description>
+				Returns the current user's Steam ID.
+			</description>
+		</method>
 		<method name="get_user_steam_id">
 			<return type="int">
 			</return>
@@ -27,5 +41,20 @@
 				Returns the current user's Steam ID.
 			</description>
 		</method>
+		<method name="run_callbacks">
+			<return type="int">
+			</return>
+			<description>
+				Must be called every frame to process Steam callbacks. You can call this in the `_physics_process` method of your main scene or in a singleton.
+			</description>
+		</method>
     </methods>
+	<signals>
+		<signal name="game_overlay_toggled">
+			<param index="0" name="active" type="bool" />
+			<description>
+				Emitted when Steam overlay is toggled.
+			</description>
+		</signal>
+	</signals>
 </class>
