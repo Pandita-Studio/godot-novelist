@@ -35,6 +35,9 @@
 #include "core/object/ref_counted.h"
 #include "core/os/os.h"
 
+#define STEAM_USER_INTERFACE_VERSION "SteamAPI_SteamUser_v023"
+#define STEAM_USERSTATS_INTERFACE_VERSION "SteamAPI_SteamUserStats_v013"
+
 // As we are loading the library dynamically, we need to define the minimal types signatures.
 // See steam_api.h, steam_api_flat.h, steam_api_common.h, steam_api_internal.h and steam_api.json for reference.
 // (Steam API headers are not included)
@@ -65,10 +68,6 @@ struct GameOverlayActivated_t {
 	static const int k_iCallback = 331;
 };
 
-// Interfaces signatures
-typedef void ISteamUser;
-typedef void ISteamFriends;
-
 // Init functions signatures
 typedef bool (*SteamAPI_Init_Function)();
 typedef SteamAPIInitResult (*SteamAPI_InitFlat_Function)(char *r_err_msg);
@@ -85,8 +84,16 @@ typedef bool (*SteamAPI_ManualDispatch_GetNextCallback_Function)(HSteamPipe hSte
 typedef void (*SteamAPI_ManualDispatch_FreeLastCallback_Function)(HSteamPipe hSteamPipe);
 
 // Flat API functions signatures
+typedef void ISteamUser;
 typedef ISteamUser *(*SteamAPI_SteamUser_Function)();
 typedef uint64_t (*SteamAPI_ISteamUser_GetSteamID_Function)(ISteamUser *self);
+
+typedef void ISteamUserStats;
+typedef ISteamUserStats *(*SteamAPI_SteamUserStats_Function)();
+typedef bool (*SteamAPI_ISteamUserStats_GetAchievement)(ISteamUserStats *self, const char *pchName, bool *pbAchieved);
+typedef bool (*SteamAPI_ISteamUserStats_SetAchievement)(ISteamUserStats *self, const char *pchName);
+typedef bool (*SteamAPI_ISteamUserStats_ClearAchievement)(ISteamUserStats *self, const char *pchName);
+typedef bool (*SteamAPI_ISteamUserStats_StoreStats)(ISteamUserStats *self);
 
 class SteamWrapper : public Object {
 	GDCLASS(SteamWrapper, Object);
@@ -105,6 +112,10 @@ public:
 	// Wrapped API functions
 	uint64_t get_user_steam_id();
 
+	bool get_achievement(const String &name);
+	void set_achievement(const String &name);
+	void clear_achievement(const String &name);
+
 	// This function should be called every frame (on _physics_process() maybe?) to process callbacks
 	void run_callbacks();
 
@@ -122,6 +133,12 @@ private:
 	SteamAPI_SteamUser_Function steam_get_user_interface_function = nullptr;
 	SteamAPI_ISteamUser_GetSteamID_Function steam_get_steamid_function = nullptr;
 
+	SteamAPI_SteamUserStats_Function steam_get_user_stats_interface_function = nullptr;
+	SteamAPI_ISteamUserStats_GetAchievement steam_get_achievement_function = nullptr;
+	SteamAPI_ISteamUserStats_SetAchievement steam_set_achievement_function = nullptr;
+	SteamAPI_ISteamUserStats_ClearAchievement steam_clear_achievement_function = nullptr;
+	SteamAPI_ISteamUserStats_StoreStats steam_store_stats_function = nullptr;
+
 	// Callbacks functions pointers
 	SteamAPI_GetHSteamUser_Function steam_get_huser_function = nullptr;
 	SteamAPI_GetHSteamPipe_Function steam_get_hpipe_function = nullptr;
@@ -135,6 +152,7 @@ private:
 	HSteamUser h_user;
 	HSteamPipe h_pipe;
 	ISteamUser *steam_user_interface = nullptr;
+	ISteamUserStats *steam_user_stats_interface = nullptr;
 	void *steam_library_handle = nullptr;
 
 	// Some internal variables

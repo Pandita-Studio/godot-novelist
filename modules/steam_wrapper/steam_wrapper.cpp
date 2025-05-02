@@ -140,9 +140,9 @@ SteamWrapper::SteamWrapper() {
 
 	// SteamAPI_SteamUser_v023 can be loaded but SteamAPI_SteamUser dont, why?
 	// ToDo: check for multiple versions for better compatibility
-	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_SteamUser_v023", symbol_handle);
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, STEAM_USER_INTERFACE_VERSION, symbol_handle);
 	if (err != OK) {
-		module_print("Error loading SteamAPI_SteamUser_v023");
+		module_print("Error loading SteamAPI_SteamUser");
 		return;
 	}
 	steam_get_user_interface_function = (SteamAPI_SteamUser_Function)symbol_handle;
@@ -155,13 +155,57 @@ SteamWrapper::SteamWrapper() {
 		return;
 	}
 
-	// Flat functions
+	// SteamUser interface flat functions
 	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ISteamUser_GetSteamID", symbol_handle);
 	if (err != OK) {
 		module_print("Error loading SteamAPI_ISteamUser_GetSteamID");
 		return;
 	}
 	steam_get_steamid_function = (SteamAPI_ISteamUser_GetSteamID_Function)symbol_handle;
+
+	// SteamUserStats interface
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, STEAM_USERSTATS_INTERFACE_VERSION, symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_SteamUserStats");
+		return;
+	}
+	steam_get_user_stats_interface_function = (SteamAPI_SteamUserStats_Function)symbol_handle;
+
+	steam_user_stats_interface = steam_get_user_stats_interface_function();
+
+	if (!steam_user_stats_interface) {
+		module_print("SteamUserStats interface cannot be loaded");
+		return;
+	}
+
+	// SteamUserStats interface flat functions
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ISteamUserStats_GetAchievement", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ISteamUserStats_GetAchievement");
+		return;
+	}
+	steam_get_achievement_function = (SteamAPI_ISteamUserStats_GetAchievement)symbol_handle;
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ISteamUserStats_SetAchievement", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ISteamUserStats_SetAchievement");
+		return;
+	}
+	steam_set_achievement_function = (SteamAPI_ISteamUserStats_SetAchievement)symbol_handle;
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ISteamUserStats_ClearAchievement", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ISteamUserStats_ClearAchievement");
+		return;
+	}
+	steam_clear_achievement_function = (SteamAPI_ISteamUserStats_ClearAchievement)symbol_handle;
+
+	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_ISteamUserStats_StoreStats", symbol_handle);
+	if (err != OK) {
+		module_print("Error loading SteamAPI_ISteamUserStats_StoreStats");
+		return;
+	}
+	steam_store_stats_function = (SteamAPI_ISteamUserStats_StoreStats)symbol_handle;
 
 	// Callbacks
 	err = OS::get_singleton()->get_dynamic_library_symbol_handle(steam_library_handle, "SteamAPI_GetHSteamUser", symbol_handle);
@@ -235,6 +279,34 @@ uint64_t SteamWrapper::get_user_steam_id() {
 	return steam_get_steamid_function(steam_user_interface);
 }
 
+bool SteamWrapper::get_achievement(const String &name) {
+	if (!steam_initialized || !steam_user_stats_interface || !steam_get_achievement_function) {
+		module_print("Cannot retrieve achievement, interface not available");
+		return false;
+	}
+	bool achieved = false;
+	steam_get_achievement_function(steam_user_stats_interface, name.utf8().get_data(), &achieved);
+	return achieved;
+}
+
+void SteamWrapper::set_achievement(const String &name) {
+	if (!steam_initialized || !steam_user_stats_interface || !steam_set_achievement_function) {
+		module_print("Cannot set achievement, interface not available");
+		return;
+	}
+	steam_set_achievement_function(steam_user_stats_interface, name.utf8().get_data());
+	steam_store_stats_function(steam_user_stats_interface);
+}
+
+void SteamWrapper::clear_achievement(const String &name) {
+	if (!steam_initialized || !steam_user_stats_interface || !steam_clear_achievement_function) {
+		module_print("Cannot clear achievement, interface not available");
+		return;
+	}
+	steam_clear_achievement_function(steam_user_stats_interface, name.utf8().get_data());
+	steam_store_stats_function(steam_user_stats_interface);
+}
+
 void SteamWrapper::run_callbacks() {
 	if (!steam_initialized) {
 		module_print("Cannot run callbacks, SteamAPI not initialized");
@@ -261,6 +333,9 @@ void SteamWrapper::run_callbacks() {
 
 void SteamWrapper::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_app_id"), &SteamWrapper::get_app_id);
+	ClassDB::bind_method(D_METHOD("get_achievement", "name"), &SteamWrapper::get_achievement);
+	ClassDB::bind_method(D_METHOD("set_achievement", "name"), &SteamWrapper::set_achievement);
+	ClassDB::bind_method(D_METHOD("clear_achievement", "name"), &SteamWrapper::clear_achievement);
 	ClassDB::bind_method(D_METHOD("is_steam_initialized"), &SteamWrapper::is_steam_initialized);
 	ClassDB::bind_method(D_METHOD("get_steam_wrapper_version"), &SteamWrapper::get_steam_wrapper_version);
 	ClassDB::bind_method(D_METHOD("get_steam_api_version"), &SteamWrapper::get_steam_api_version);

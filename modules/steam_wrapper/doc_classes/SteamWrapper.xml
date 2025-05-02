@@ -23,17 +23,17 @@
 			</description>
 		</method>
 		<method name="get_steam_wrapper_version">
-			<return type="int">
+			<return type="String">
 			</return>
 			<description>
-				Returns the current user's Steam ID.
+				Returns the version of the Steam wrapper.
 			</description>
 		</method>
 		<method name="get_steam_api_version">
-			<return type="int">
+			<return type="String">
 			</return>
 			<description>
-				Returns the current user's Steam ID.
+				Returns the version of the current supported Steam API.
 			</description>
 		</method>
 		<method name="get_user_steam_id">
@@ -41,6 +41,27 @@
 			</return>
 			<description>
 				Returns the current user's Steam ID.
+			</description>
+		</method>
+		<method name="get_achievement">
+			<return type="bool">
+			</return>
+			<description>
+				Returns `True` if the achievement with the given name is unlocked, `False` otherwise.
+			</description>
+		</method>
+		<method name="set_achievement">
+			<return type="void">
+			</return>
+			<description>
+				Unlocks the achievement with the given name.
+			</description>
+		</method>
+		<method name="clear_achievement">
+			<return type="void">
+			</return>
+			<description>
+				Clears the unlocked state of the achievement with the given name. This should only be used for testing purposes.
 			</description>
 		</method>
 		<method name="run_callbacks">
