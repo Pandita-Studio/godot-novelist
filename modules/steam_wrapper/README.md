@@ -2,7 +2,7 @@
 
 This module dynamically loads and wraps the Steam API and creates a singleton to interact with it.
 
-It is designed to use the Steam API in a Godot project without needing to compile the Steamworks SDK into the engine because it dinamically loads the Steam API at runtime and provides a simple interface to interact with it.
+It is designed to use the Steam API in a Godot project without needing to compile the Steamworks SDK into the engine because it dynamically loads the Steam API at runtime and provides a simple interface to interact with it.
 
 If it is true that we do not need to compile the Steamworks SDK into the engine, however, to use the Steam API, you still need to have the Steamworks SDK binaries (.dll or .so) in the same directory as your Godot editor or in your game's executable directory.
 
@@ -38,7 +38,7 @@ Since we are dynamically loading the Steam API, we get some advantages:
 
 - We don't need to include Steam API headers during the build process.
 - The Steam API will load only if the API distributables are available. This is optional, if the Steam libraries are not present, the wrapper won’t crash, it will simply notify that the Steam API is not available.
-- Since we don't have to include Steam API headers or libraries during compilation, the build process becomes much easier, especially in CI environments. 
+- Since we don't have to include Steam API headers or libraries during compilation, the build process becomes much easier, especially in CI environments.
 
 ## To-Do
 
