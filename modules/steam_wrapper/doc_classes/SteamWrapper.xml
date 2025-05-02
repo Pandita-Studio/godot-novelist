@@ -51,10 +51,6 @@
 			</description>
 		</method>
     </methods>
-	<members>
-    </members>
-	<constants>
-    </constants>
 	<signals>
 		<signal name="game_overlay_toggled">
 			<param index="0" name="active" type="bool" />
