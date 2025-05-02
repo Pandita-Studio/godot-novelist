@@ -1,10 +1,12 @@
-<class name="SteamWrapper" inherits="Object" version="0.1" is_singleton="true">
+<class name="SteamWrapper" inherits="Object" version="0.1">
 	<brief_description>
 		Dynamic Steam API wrapper for Godot.
 	</brief_description>
 	<description>
 		This module dynamically loads and wraps the Steam API and creates a singleton to interact with it.
 	</description>
+	<tutorials>
+    </tutorials>
 	<methods>
 		<method name="get_app_id">
 			<return type="int">
@@ -49,6 +51,10 @@
 			</description>
 		</method>
     </methods>
+	<members>
+    </members>
+	<constants>
+    </constants>
 	<signals>
 		<signal name="game_overlay_toggled">
 			<param index="0" name="active" type="bool" />
